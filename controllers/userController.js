@@ -8,13 +8,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/verifyJWT');
 
-// Signup route for user registration
-router.post('/signup', async (req, res, next) => {
+// register route for user registration
+router.post('/register', async (req, res, next) => {
     try {
-        let newUser = req.body;
+        const { username, firstName, lastName, password } = req.body;
 
         // Check if the username already exists
-        const existingUser = await db.User.findUserByUsername({ username: newUser.username});
+        const existingUser = await db.User.findUserByUsername(username);
 
         if (existingUser) {
             console.log('in back')
@@ -22,76 +22,86 @@ router.post('/signup', async (req, res, next) => {
         };
 
         // Hash the password before saving the user
-        newUser.password  = bcrypt.hashSync(newUser.password, bcrypt.genSaltSync(10));
+        const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
     
-        const createUser = new db.User(newUser);
-        await createUser.save();
+        const newUser = await db.User.createUser(
+            username,
+            firstName,
+            lastName,
+            hashedPassword
+        );
 
         // Create a token for the new user
-        const token = createToken(createUser._id)
-        let username = createUser.username
+        const token = createToken(newUser.user_id);
+        
 
         console.log(token)
 
+        // Send cookie
         res.cookie("token", token, {
-            withCredentials: true,
-            httpOnly: false,
-        })
+        httpOnly: true,
+        secure: false, // set true in production
+        });
 
-        res.status(201).json({ message: "User signed up successfully", success: true, token, username });
-
-        next();
+        res.status(201).json({
+            message: "User signed up successfully",
+            success: true,
+            token,
+            username: newUser.username
+        });
 
     } catch (error) {
         console.error(error);
+        res.status(500).json({ error: "Error creating user" });
     }
 });
 
 // Login route for user authentication
 router.post('/login', async (req, res, next) => {
     try {
-        const userLogin = req.body;
+        const { username, password } = req.body;
 
         // Check if both username and password are provided
-        if(!userLogin.username || !userLogin.password ){
+        if(!username || !password ){
             return res.json({message:'All fields are required'});
 
         }
 
-        const user = await db.User.findUserByUsername({username: userLogin.username});
+        const user = await db.User.findUserByUsername(username);
 
             // Check if user exists in the database
         if(!user) {
             // console.log(`Could not find this user in the database: User with username ${userLogin.username}`);
-            return res.status(400).json({ message: `Could not find ${userLogin.username} in the database` });
+            return res.status(400).json({ message: `Could not find ${username} in the database` });
         }
 
         // Compare provided password with stored hash
-        const auth = await bcrypt.compare(userLogin.password, user.password);
+        const auth = await bcrypt.compare(password, user.password_hash);
 
         if (!auth) {
             return res.status(400).json({ message: `The password did not match the for the user: ${user.username}` });
         }else {
             // make a token
-            const token = createToken(user._id)
-            let username = user.username
+            const token = createToken(user.user_id)
 
             console.log("token from login route = ", token)
 
             res.cookie("token", token, {
                 httpOnly: true,
-                withCredentials: true,
-            })
-            res
-            .status(201)
-            .json({ message: "User signed in successfully", success: true, token, username });
-
-            next();
+                secure: false, // set true in production
+            });
+            res.status(201).json({
+            message: "User signed in successfully",
+            success: true,
+            token,
+            username: user.username
+        });
+        
         }
 
     } catch (error) {
-        console.log('backend')
         console.error(error);
+        res.status(500).json({ error: "Error Logging In" });
     }
 });
 
@@ -114,3 +124,16 @@ router.get('/', async (req, res) => {
         }
   })
 })
+
+// Function to create JWT token
+function createToken(userID){
+    return jwt.sign(
+        { userID }, 
+        process.env.SECRET, 
+        { expiresIn: '24h'} // Token expiration time set to 24 hours
+    );
+};
+ 
+
+// Export the router to be used in other parts of the application
+module.exports = router
