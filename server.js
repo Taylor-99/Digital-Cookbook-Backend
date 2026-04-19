@@ -5,14 +5,12 @@ const livereload = require("livereload");
 const connectLiveReload = require("connect-livereload");
 const morgan = require('morgan')
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
 
 userCtrl = require('./controllers/userController');
 
 const PORT = process.env.PORT||4000;
 
 const app = express();
-app.use(express.json());
 
 const liveReloadServer = livereload.createServer();
 
@@ -24,14 +22,13 @@ liveReloadServer.server.once("connection", () => {
 });
 
 // Indicates where our static files are located
-app.use(cookieParser());
-// app.use(
-//     cors({
-//       origin: ["http://localhost:3000"],
-//       methods: ["GET", "POST", "PUT", "DELETE"],
-//       credentials: true,
-//     })
-//   );
+app.use(
+    cors({
+      origin: ["http://localhost:5173"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+    })
+  );
 
 // Middleware
 app.use(express.static('public'));
