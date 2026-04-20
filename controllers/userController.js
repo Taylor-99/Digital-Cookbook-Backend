@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/verifyJWT');
 
 // register route for user registration
-router.post('/register', async (req, res, next) => {
+router.post('/signup', async (req, res, next) => {
     try {
         const { username, firstName, lastName, password } = req.body;
 
@@ -123,7 +123,18 @@ router.get('/', async (req, res) => {
             else return res.json({ status: false })
         }
   })
-})
+});
+
+// Logout route to clear the authentication token
+router.get('/logout', verifyToken, (req, res) => {
+    console.log('logging out')
+    res.clearCookie( 'token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+    })
+    res.json({ message: "Logged out" });
+});
 
 // Function to create JWT token
 function createToken(userID){
