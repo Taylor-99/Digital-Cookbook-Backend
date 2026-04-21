@@ -7,6 +7,7 @@ const morgan = require('morgan')
 const cors = require("cors");
 
 userCtrl = require('./controllers/userController');
+recipeCtrl = require('./controllers/recipeController');
 
 const PORT = process.env.PORT||4000;
 
@@ -53,6 +54,7 @@ app.get('/test-db', async (req, res) => {
 });
 
 app.use('/auth', userCtrl);
+app.use('/recipe', recipeCtrl);
 
 
 // App Listen
