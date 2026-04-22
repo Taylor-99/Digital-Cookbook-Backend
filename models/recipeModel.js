@@ -1,13 +1,38 @@
 const pool = require('../db');
 
 // Create recipe
-const createRecipe = async (userId, spoonacular_id, title, image, description, cook_time, prep_time, serving_size, source) => {
-  const result = await pool.query(
-    `INSERT INTO recipes (user_id, title, description)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+const createRecipe = async (
+  client,
+  user_id,
+  title,
+  image,
+  cook_time,
+  prep_time,
+  serving_size,
+  description,
+  source,
+  spoonacular_id
+) => {
+  const result = await client.query(
+    `INSERT INTO recipes
+     (user_id, title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
      RETURNING *`,
-    [userId, spoonacular_id, title, image, description, cook_time, prep_time, serving_size, source]
+    [
+      user_id,
+      title,
+      image,
+      cook_time,
+      prep_time,
+      serving_size,
+      description,
+      source,
+      spoonacular_id
+    ]
   );
+
+  console.log("RECIPE RESULT: ", result.rows[0])
+  console.log("RECIPE ID: ", result.rows[0]?.recipe_id)
 
   return result.rows[0];
 };
@@ -23,10 +48,10 @@ const getUserRecipes = async (userId) => {
 };
 
 // Get single recipe
-const getRecipeById = async (recipeId) => {
+const getRecipeById = async (recipeId, userId) => {
   const result = await pool.query(
-    `SELECT * FROM recipes WHERE recipe_id = $1`,
-    [recipeId]
+    `SELECT * FROM recipes WHERE recipe_id = $1 AND user_id = $2`,
+    [recipeId, userId]
   );
 
   return result.rows[0];

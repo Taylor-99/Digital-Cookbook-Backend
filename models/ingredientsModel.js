@@ -1,8 +1,8 @@
-const pool = require('../db');
+const client = require('../db');
 
 // Create ingredients
-const createIngredient = async (recipe_id, name, quantity, position) => {
-  const result = await pool.query(
+const createIngredient = async (client, recipe_id, name, quantity, position) => {
+  const result = await client.query(
     `INSERT INTO ingredients (recipe_id, name, quantity, position)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
@@ -14,7 +14,7 @@ const createIngredient = async (recipe_id, name, quantity, position) => {
 
 // Get ingredients by recipe
 const getRecipeIngredients = async (recipeId) => {
-  const result = await pool.query(
+  const result = await client.query(
     `SELECT * FROM ingredients WHERE recipe_id = $1`,
     [recipeId]
   );
