@@ -1,12 +1,12 @@
 const client = require('../db');
 
 // Create ingredients
-const createIngredient = async (client, recipe_id, name, quantity, position) => {
+const createIngredient = async (client, recipe_id, name, amount, unit, position) => {
   const result = await client.query(
-    `INSERT INTO ingredients (recipe_id, name, quantity, position)
+    `INSERT INTO ingredients (recipe_id, name, amount, unit, position)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [recipe_id, name, quantity, position]
+    [recipe_id, name, amount, unit, position]
   );
 
   return result.rows[0];

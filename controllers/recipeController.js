@@ -220,7 +220,8 @@ router.post('/create', verifyToken, async (req, res) => {
             client,
             recipeId,
             ingredients[i].name,
-            ingredients[i].quantity,
+            ingredients[i].amount,
+            ingredients[i].unit,
             i
           );
         };
