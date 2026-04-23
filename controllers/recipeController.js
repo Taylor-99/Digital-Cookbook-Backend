@@ -174,18 +174,6 @@ router.post('/create', verifyToken, async (req, res) => {
         ? Number(spoonacular_id)
         : null;
 
-    console.log([
-        userID,
-        title,
-        image,
-        cook_time,
-        prep_time,
-        serving_size,
-        description,
-        source,
-        spoonacularId
-    ])
-
   try {
 
     await client.query('BEGIN'); //start transaction
@@ -203,19 +191,16 @@ router.post('/create', verifyToken, async (req, res) => {
         source,
         spoonacularId
     );
+    console.log("RECIPE: ", recipe)
+    console.log("INGREDIENTS: ", ingredients)
+    console.log("INSTRUCTIONS: ", instructions)
 
     const recipeId = recipe.recipe_id;
-
-    console.log("RECIPE RESULT: ", recipe)
-    console.log("Ingredients: ", ingredients)
-    console.log("instructions RESULT: ", instructions)
-
     
     if(source === 'user'){
         
         // 2. Insert ingredients
         for (let i = 0; i < ingredients.length; i++) {
-            console.log(recipeId)
           await db.Ingredient.createIngredient(
             client,
             recipeId,
@@ -239,17 +224,15 @@ router.post('/create', verifyToken, async (req, res) => {
 
     await client.query('COMMIT'); //success
 
-    res.status(201).json({
+    return res.status(201).json({
         message: 'Recipe created successfully',
         recipeId,
     });
 
-    res.json({ message: 'Recipe created' });
-
   } catch (err) {
         await client.query('ROLLBACK'); //undo everything if error
         console.error(err);
-        res.status(500).json({ error: 'Error creating recipe' });
+        return res.status(500).json({ error: 'Error creating recipe' });
   } finally {
         client.release();
   }
