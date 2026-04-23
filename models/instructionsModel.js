@@ -9,6 +9,8 @@ const createInstruction = async (client, recipe_id, step, position) => {
     [recipe_id, step, position]
   );
 
+  console.log("INSTRUCTIONS: ",result.rows[0])
+
   return result.rows[0];
 };
 

@@ -31,9 +31,6 @@ const createRecipe = async (
     ]
   );
 
-  console.log("RECIPE RESULT: ", result.rows[0])
-  console.log("RECIPE ID: ", result.rows[0]?.recipe_id)
-
   return result.rows[0];
 };
 

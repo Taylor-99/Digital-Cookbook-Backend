@@ -191,33 +191,35 @@ router.post('/create', verifyToken, async (req, res) => {
         source,
         spoonacularId
     );
-    console.log("RECIPE: ", recipe)
-    console.log("INGREDIENTS: ", ingredients)
-    console.log("INSTRUCTIONS: ", instructions)
+    // console.log("RECIPE: ", recipe)
+    // console.log("INGREDIENTS: ", ingredients)
+    // console.log("INSTRUCTIONS: ", instructions)
 
     const recipeId = recipe.recipe_id;
+
+    console.log(source)
     
     if(source === 'user'){
         
         // 2. Insert ingredients
-        for (let i = 0; i < ingredients.length; i++) {
+        for (let rItem = 0; rItem < ingredients.length; rItem++) {
           await db.Ingredient.createIngredient(
             client,
             recipeId,
-            ingredients[i].name,
-            ingredients[i].amount,
-            ingredients[i].unit,
-            i
+            ingredients[rItem].name,
+            ingredients[rItem].quantity,
+            ingredients[rItem].unit,
+            rItem
           );
         };
     
         // 3. Insert instructions
-        for (let i = 0; i < instructions.length; i++) {
+        for (let rStep = 0; rStep < instructions.length; rStep++) {
           await db.Instruction.createInstruction(
             client,
             recipeId,
-            instructions[i].step,
-            i
+            instructions[rStep].step,
+            rStep
           );
         };
     };
