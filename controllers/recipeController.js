@@ -37,6 +37,8 @@ router.get('/', verifyToken, async (req, res) => {
 // used for viewing and editing
 router.get('/:id', verifyToken, async (req, res) => {
 
+  console.log("in backend")
+
     const recipeID = req.params.id;
     const userID = req.user.user_id;
 
@@ -99,56 +101,66 @@ router.put('/:id', verifyToken, async (req, res) => {
   const recipeID = req.params.id;
   const userID = req.user.user_id;
 
-  const { title, ingredients, instructions } = req.body;
+  const { title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id, ingredients, instructions } = req.body;
 
   const client = await pool.connect();
+
+  const spoonacularId = spoonacular_id !== undefined && spoonacular_id !== ""
+        ? Number(spoonacular_id)
+        : null;
 
   try {
     await client.query('BEGIN');
 
     // 1. Update recipe (and check ownership)
-    const recipeResult = await client.query(
-      `UPDATE recipes 
-       SET title = $1 
-       WHERE recipe_id = $2 AND user_id = $3
-       RETURNING *`,
-      [title, recipeID, userID]
+
+    const updatedRecipe = await db.Recipe.updateRecipe(
+        client,
+        userID,
+        title,
+        image,
+        cook_time,
+        prep_time,
+        serving_size,
+        description,
+        source,
+        spoonacularId
     );
 
-    if (recipeResult.rows.length === 0) {
+    if (updatedRecipe.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Recipe not found or unauthorized' });
     }
 
     // 2. Delete old ingredients
-    await client.query(
-      `DELETE FROM ingredients WHERE recipe_id = $1`,
-      [recipeID]
-    );
+    const deletedIngredients = await db.Ingredient.deleteIngredientsByRecipeId(client, recipeID);
+    console.log("Deleted ingredients: ", deletedIngredients);
 
     // 3. Insert new ingredients
-    for (let i = 0; i < ingredients.length; i++) {
-      await client.query(
-        `INSERT INTO ingredients (recipe_id, name, quantity, position)
-         VALUES ($1, $2, $3, $4)`,
-        [recipeID, ingredients[i].name, ingredients[i].quantity, i]
+    for (let rItem = 0; rItem < ingredients.length; rItem++) {
+      await db.Ingredient.createIngredient(
+        client,
+        recipeId,
+        ingredients[rItem].name,
+        ingredients[rItem].quantity,
+        ingredients[rItem].unit,
+        rItem
       );
-    }
+    };
 
     // 4. Delete old instructions
-    await client.query(
-      `DELETE FROM instructions WHERE recipe_id = $1`,
-      [recipeID]
-    );
+    const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(client, recipeID);
+    console.log("Deleted instructions: ", deletedInstructions);
 
     // 5. Insert new instructions
-    for (let i = 0; i < instructions.length; i++) {
-      await client.query(
-        `INSERT INTO instructions (recipe_id, step, position)
-         VALUES ($1, $2, $3)`,
-        [recipeID, instructions[i].step, i]
+    for (let rStep = 0; rStep < instructions.length; rStep++) {
+      await db.Instruction.createInstruction(
+        client,
+        recipeId,
+        instructions[rStep].step,
+        rStep
       );
-    }
+    };
 
     await client.query('COMMIT');
 

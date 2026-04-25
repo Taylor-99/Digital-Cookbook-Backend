@@ -66,9 +66,54 @@ const saveApiRecipe = async (userId, recipe) => {
   return result.rows[0];
 };
 
+const updateRecipe = async (
+  client,
+  recipe_id,
+  user_id,
+  title,
+  image,
+  cook_time,
+  prep_time,
+  serving_size,
+  description,
+  source,
+  spoonacular_id) => {
+
+    const result = await client.query(
+      `UPDATE recipes 
+       SET 
+        title = $1,
+        image = $2,
+        cook_time = $3,
+        prep_time = $4,
+        serving_size = $5,
+        description = $6,
+        source = $7,
+        spoonacular_id = $8, updated_at = NOW()
+       WHERE recipe_id = $9 AND user_id = $10
+       RETURNING *`,
+      [
+        title,
+        image,
+        cook_time,
+        prep_time,
+        serving_size,
+        description,
+        source,
+        spoonacular_id,
+        recipe_id,
+        user_id
+      ]
+    );
+
+    return result.rows[0];
+
+};
+
 module.exports = {
   createRecipe,
   getUserRecipes,
   getRecipeById,
   saveApiRecipe,
+  updateRecipe,
 };
