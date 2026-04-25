@@ -112,6 +112,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     const updatedRecipe = await db.Recipe.updateRecipe(
         client,
+        recipeID,
         userID,
         title,
         image,
@@ -123,7 +124,7 @@ router.put('/:id', verifyToken, async (req, res) => {
         spoonacularId
     );
 
-    if (updatedRecipe.rows.length === 0) {
+    if (updatedRecipe === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Recipe not found or unauthorized' });
     }
@@ -136,7 +137,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     for (let rItem = 0; rItem < ingredients.length; rItem++) {
       await db.Ingredient.createIngredient(
         client,
-        recipeId,
+        recipeID,
         ingredients[rItem].name,
         ingredients[rItem].quantity,
         ingredients[rItem].unit,
@@ -152,7 +153,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     for (let rStep = 0; rStep < instructions.length; rStep++) {
       await db.Instruction.createInstruction(
         client,
-        recipeId,
+        recipeID,
         instructions[rStep].step,
         rStep
       );

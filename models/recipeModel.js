@@ -89,7 +89,8 @@ const updateRecipe = async (
         serving_size = $5,
         description = $6,
         source = $7,
-        spoonacular_id = $8, updated_at = NOW()
+        spoonacular_id = $8, 
+        updated_at = NOW()
        WHERE recipe_id = $9 AND user_id = $10
        RETURNING *`,
       [
