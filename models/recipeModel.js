@@ -110,10 +110,24 @@ const updateRecipe = async (
 
 };
 
+const deleteRecipe = async (recipe_id, user_id) => {
+
+  const result = await pool.query(
+      `DELETE FROM recipes 
+      WHERE recipe_id = $1 AND user_id = $2
+      RETURNING *`,
+      [recipe_id, user_id]
+  );
+
+  return result.rows[0];
+
+};
+
 module.exports = {
   createRecipe,
   getUserRecipes,
   getRecipeById,
   saveApiRecipe,
   updateRecipe,
+  deleteRecipe,
 };

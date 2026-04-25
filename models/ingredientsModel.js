@@ -15,13 +15,13 @@ const createIngredient = async (client, recipe_id, name, quantity, unit, positio
 };
 
 // Get ingredients by recipe
-const getRecipeIngredients = async (recipe_id) => {
+const getRecipeIngredients = async (client, recipe_id) => {
   const result = await client.query(
     `SELECT * FROM ingredients WHERE recipe_id = $1`,
     [recipe_id]
   );
 
-  return result.rows[0];
+  return result.rows;
 };
 
 const deleteIngredientsByRecipeId = async (client, recipe_id) => {

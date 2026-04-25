@@ -37,10 +37,11 @@ router.get('/', verifyToken, async (req, res) => {
 // used for viewing and editing
 router.get('/:id', verifyToken, async (req, res) => {
 
-  console.log("in backend")
+  // console.log("in backend")
 
     const recipeID = req.params.id;
     const userID = req.user.user_id;
+    const client = await pool.connect();
 
     try {
 
@@ -50,8 +51,8 @@ router.get('/:id', verifyToken, async (req, res) => {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        const recipeIngredients = await db.Ingredient.getRecipeIngredients(recipeID);
-        const recipeInstructions = await db.Instruction.getRecipeInstructions(recipeID);
+        const recipeIngredients = await db.Ingredient.getRecipeIngredients(client, recipeID);
+        const recipeInstructions = await db.Instruction.getRecipeInstructions(client, recipeID);
 
         const fullRecipe = {
             ...recipe,
@@ -77,20 +78,16 @@ router.delete('/:id', verifyToken, async (req, res) => {
 
     const recipeID = req.params.id;
     const userID = req.user.user_id;
+    const client = await pool.connect();
 
     try{
-        const result = await pool.query(
-            `DELETE FROM recipes 
-            WHERE recipe_id = $1 AND user_id = $2
-            RETURNING *`,
-            [recipeID, userID]
-        );
+        const deletedRecipe = db.Recipe.deleteRecipe(recipeID, userID);
 
-        if (result.rows.length === 0){
+        if (deletedRecipe === 0){
             return res.status(404).json({message: 'Recipe not found or unauthorized'});
         }
 
-        res.json({message: 'Recipe deleted successfilly'});
+        return res.json({message: 'Recipe deleted successfully'});
     }catch (err) {
         console.error(err);
         res.status(500).json({error: 'ERROR deleting recipe'})
@@ -100,10 +97,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
 router.put('/:id', verifyToken, async (req, res) => {
   const recipeID = req.params.id;
   const userID = req.user.user_id;
+  const client = await pool.connect();
 
   const { title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id, ingredients, instructions } = req.body;
-
-  const client = await pool.connect();
 
   const spoonacularId = spoonacular_id !== undefined && spoonacular_id !== ""
         ? Number(spoonacular_id)

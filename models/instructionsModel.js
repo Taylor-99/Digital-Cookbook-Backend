@@ -15,13 +15,13 @@ const createInstruction = async (client, recipe_id, step, position) => {
 };
 
 // Get instructions by recipe
-const getRecipeInstructions = async (recipe_id) => {
+const getRecipeInstructions = async (client, recipe_id) => {
   const result = await client.query(
     `SELECT * FROM instructions WHERE recipe_id = $1`,
     [recipe_id]
   );
 
-  return result.rows[0];
+  return result.rows;
 };
 
 const deleteInstructionsByRecipeId = async (client, recipe_id) => {
