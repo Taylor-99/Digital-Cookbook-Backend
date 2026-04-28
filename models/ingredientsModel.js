@@ -1,8 +1,8 @@
-const client = require('../db');
+const pool = require('../db');
 
 // Create ingredients
-const createIngredient = async (client, recipe_id, name, quantity, unit, position) => {
-  const result = await client.query(
+const createIngredient = async (recipe_id, name, quantity, unit, position) => {
+  const result = await pool.query(
     `INSERT INTO ingredients (recipe_id, name, quantity, unit, position)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
@@ -15,8 +15,8 @@ const createIngredient = async (client, recipe_id, name, quantity, unit, positio
 };
 
 // Get ingredients by recipe
-const getRecipeIngredients = async (client, recipe_id) => {
-  const result = await client.query(
+const getRecipeIngredients = async (recipe_id) => {
+  const result = await pool.query(
     `SELECT * FROM ingredients WHERE recipe_id = $1`,
     [recipe_id]
   );
@@ -24,8 +24,8 @@ const getRecipeIngredients = async (client, recipe_id) => {
   return result.rows;
 };
 
-const deleteIngredientsByRecipeId = async (client, recipe_id) => {
-  const result = await client.query(
+const deleteIngredientsByRecipeId = async (recipe_id) => {
+  const result = await pool.query(
     `DELETE FROM ingredients
     WHERE recipe_id = $1`,
     [recipe_id]

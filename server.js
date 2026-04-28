@@ -8,6 +8,7 @@ const cors = require("cors");
 
 userCtrl = require('./controllers/userController');
 recipeCtrl = require('./controllers/recipeController');
+collectionCtrl = require('./controllers/collectionsController');
 
 const PORT = process.env.PORT||4000;
 
@@ -55,6 +56,7 @@ app.get('/test-db', async (req, res) => {
 
 app.use('/auth', userCtrl);
 app.use('/recipe', recipeCtrl);
+app.use('./collection', collectionCtrl);
 
 
 // App Listen

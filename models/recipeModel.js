@@ -2,7 +2,6 @@ const pool = require('../db');
 
 // Create recipe
 const createRecipe = async (
-  client,
   user_id,
   title,
   image,
@@ -13,7 +12,7 @@ const createRecipe = async (
   source,
   spoonacular_id
 ) => {
-  const result = await client.query(
+  const result = await pool.query(
     `INSERT INTO recipes
      (user_id, title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -67,7 +66,6 @@ const saveApiRecipe = async (userId, recipe) => {
 };
 
 const updateRecipe = async (
-  client,
   recipe_id,
   user_id,
   title,
@@ -79,7 +77,7 @@ const updateRecipe = async (
   source,
   spoonacular_id) => {
 
-    const result = await client.query(
+    const result = await pool.query(
       `UPDATE recipes 
        SET 
         title = $1,
