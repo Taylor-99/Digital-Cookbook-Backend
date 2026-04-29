@@ -51,8 +51,8 @@ router.get('/:id', verifyToken, async (req, res) => {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        const recipeIngredients = await db.Ingredient.getRecipeIngredients(client, recipeID);
-        const recipeInstructions = await db.Instruction.getRecipeInstructions(client, recipeID);
+        const recipeIngredients = await db.Ingredient.getRecipeIngredients(recipeID);
+        const recipeInstructions = await db.Instruction.getRecipeInstructions(recipeID);
 
         const fullRecipe = {
             ...recipe,
@@ -111,7 +111,6 @@ router.put('/:id', verifyToken, async (req, res) => {
     // 1. Update recipe (and check ownership)
 
     const updatedRecipe = await db.Recipe.updateRecipe(
-        client,
         recipeID,
         userID,
         title,
@@ -136,7 +135,6 @@ router.put('/:id', verifyToken, async (req, res) => {
     // 3. Insert new ingredients
     for (let rItem = 0; rItem < ingredients.length; rItem++) {
       await db.Ingredient.createIngredient(
-        client,
         recipeID,
         ingredients[rItem].name,
         ingredients[rItem].quantity,
@@ -146,13 +144,12 @@ router.put('/:id', verifyToken, async (req, res) => {
     };
 
     // 4. Delete old instructions
-    const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(client, recipeID);
+    const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(recipeID);
     console.log("Deleted instructions: ", deletedInstructions);
 
     // 5. Insert new instructions
     for (let rStep = 0; rStep < instructions.length; rStep++) {
       await db.Instruction.createInstruction(
-        client,
         recipeID,
         instructions[rStep].step,
         rStep
@@ -189,7 +186,6 @@ router.post('/create', verifyToken, async (req, res) => {
 
     // 1. Create recipe
     const recipe = await db.Recipe.createRecipe(
-        client,
         userID,
         title,
         image,
@@ -213,7 +209,6 @@ router.post('/create', verifyToken, async (req, res) => {
         // 2. Insert ingredients
         for (let rItem = 0; rItem < ingredients.length; rItem++) {
           await db.Ingredient.createIngredient(
-            client,
             recipeId,
             ingredients[rItem].name,
             ingredients[rItem].quantity,
@@ -225,7 +220,6 @@ router.post('/create', verifyToken, async (req, res) => {
         // 3. Insert instructions
         for (let rStep = 0; rStep < instructions.length; rStep++) {
           await db.Instruction.createInstruction(
-            client,
             recipeId,
             instructions[rStep].step,
             rStep
