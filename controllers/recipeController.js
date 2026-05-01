@@ -13,11 +13,7 @@ router.get('/', verifyToken, async (req, res) => {
 
     const userID = req.user.user_id;
 
-    const client = await pool.connect();
-
     try {
-
-        await client.query('BEGIN');
 
         const userRecipes = await db.Recipe.getUserRecipes(userID);
 
@@ -39,9 +35,8 @@ router.get('/:id', verifyToken, async (req, res) => {
 
   // console.log("in backend")
 
-    const recipeID = req.params.id;
+    const { recipeID } = req.params.id;
     const userID = req.user.user_id;
-    const client = await pool.connect();
 
     try {
 
@@ -60,7 +55,7 @@ router.get('/:id', verifyToken, async (req, res) => {
             instructions: recipeInstructions
         }
 
-        res.send(fullRecipe);
+        res.json(fullRecipe);
         
         
     } catch (error) {
@@ -76,9 +71,8 @@ router.delete('/:id', verifyToken, async (req, res) => {
 
     //has FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) ON DELETE CASCADE for instructions and ingredients Tables, so when the recipe is deleted, it will delete both instructions and ingredients automatically.
 
-    const recipeID = req.params.id;
+    const { recipeID } = req.params.id;
     const userID = req.user.user_id;
-    const client = await pool.connect();
 
     try{
         const deletedRecipe = db.Recipe.deleteRecipe(recipeID, userID);
@@ -95,9 +89,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
 });
 
 router.put('/:id', verifyToken, async (req, res) => {
-  const recipeID = req.params.id;
+
+  const { recipeID } = req.params.id;
   const userID = req.user.user_id;
-  const client = await pool.connect();
 
   const { title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id, ingredients, instructions } = req.body;
 
@@ -106,7 +100,6 @@ router.put('/:id', verifyToken, async (req, res) => {
         : null;
 
   try {
-    await client.query('BEGIN');
 
     // 1. Update recipe (and check ownership)
 
@@ -124,7 +117,6 @@ router.put('/:id', verifyToken, async (req, res) => {
     );
 
     if (updatedRecipe === 0) {
-      await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Recipe not found or unauthorized' });
     }
 
@@ -145,7 +137,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     // 4. Delete old instructions
     const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(recipeID);
-    console.log("Deleted instructions: ", deletedInstructions);
+    // console.log("Deleted instructions: ", deletedInstructions);
 
     // 5. Insert new instructions
     for (let rStep = 0; rStep < instructions.length; rStep++) {
@@ -156,17 +148,13 @@ router.put('/:id', verifyToken, async (req, res) => {
       );
     };
 
-    await client.query('COMMIT');
-
     res.json({ message: 'Recipe updated successfully' });
 
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error updating recipe:', error);
     res.status(500).json({ message: 'Error updating recipe' });
-  } finally {
-    client.release();
   }
+
 });
 
 router.post('/create', verifyToken, async (req, res) => {
@@ -174,15 +162,11 @@ router.post('/create', verifyToken, async (req, res) => {
     const { title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id, ingredients, instructions } = req.body;
     const userID = req.user.user_id;
 
-    const client = await pool.connect();
-
     const spoonacularId = spoonacular_id !== undefined && spoonacular_id !== ""
         ? Number(spoonacular_id)
         : null;
 
   try {
-
-    await client.query('BEGIN'); //start transaction
 
     // 1. Create recipe
     const recipe = await db.Recipe.createRecipe(
@@ -202,7 +186,7 @@ router.post('/create', verifyToken, async (req, res) => {
 
     const recipeId = recipe.recipe_id;
 
-    console.log(source)
+    // console.log(source)
     
     if(source === 'user'){
         
@@ -227,20 +211,15 @@ router.post('/create', verifyToken, async (req, res) => {
         };
     };
 
-    await client.query('COMMIT'); //success
-
     return res.status(201).json({
         message: 'Recipe created successfully',
         recipeId,
     });
 
   } catch (err) {
-        await client.query('ROLLBACK'); //undo everything if error
         console.error(err);
         return res.status(500).json({ error: 'Error creating recipe' });
-  } finally {
-        client.release();
-  }
+  };
 
 });
 
