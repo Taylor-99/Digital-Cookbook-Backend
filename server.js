@@ -56,7 +56,7 @@ app.get('/test-db', async (req, res) => {
 
 app.use('/auth', userCtrl);
 app.use('/recipe', recipeCtrl);
-app.use('./collection', collectionCtrl);
+app.use('/collection', collectionCtrl);
 
 
 // App Listen

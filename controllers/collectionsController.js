@@ -11,10 +11,9 @@ const verifyToken = require('../middleware/VerifyJWT');
 router.get('/', verifyToken, async (req, res) => {
     const userID = req.user.user_id;
 
-    const client = await pool.connect();
+    // console.log("in backend")
 
     try {
-        await client.query('BEGIN');
 
         const userCollections = await db.Collection.getUserCollections(userID);
 
