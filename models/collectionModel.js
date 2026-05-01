@@ -71,7 +71,7 @@ const deleteCollection = async (collection_id, user_id) => {
     return result.rows[0];
 };
 
-const ownsCollection = async = (
+const ownsCollection = async (
     collection_id,
     user_id
 ) => {

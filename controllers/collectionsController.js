@@ -20,7 +20,6 @@ router.get('/', verifyToken, async (req, res) => {
 
         res.send(userCollections);
 
-        const
     } catch (error) {
         console.error("Error getting collections: ", error.message);
         res.status(500).json({message: 'Internal server error'}); 
@@ -121,9 +120,7 @@ router.put('/:id', verifyToken, async (req, res) => {
   const { collectionID } = req.params.id;
   const userID = req.user.user_id;
 
-  const { collection_name, description, is_public } = req.body;
-
-  const is_public = false;
+  const { collection_name, description} = req.body;
 
   try {
 
@@ -149,10 +146,8 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 router.post('/create', verifyToken, async (req, res) => {
 
-    const { collection_name, description, is_public } = req.body;
+    const { collection_name, description} = req.body;
     const userID = req.user.user_id;
-
-    const is_public = false;
 
   try {
 
