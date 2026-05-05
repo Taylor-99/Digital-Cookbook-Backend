@@ -34,9 +34,12 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
 
   // console.log("in backend")
+  // console.log(req.params.id)
 
-    const { recipeID } = req.params.id;
+    const recipeID = req.params.id;
     const userID = req.user.user_id;
+
+    // console.log(recipeID)
 
     try {
 

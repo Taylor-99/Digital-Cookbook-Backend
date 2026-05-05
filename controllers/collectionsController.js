@@ -150,15 +150,17 @@ router.post('/create', verifyToken, async (req, res) => {
 
   try {
 
-    const collection = await db.Collection.createCollection(
+    const newCollection = await db.Collection.createCollection(
         userID,
         collection_name,
         description
     );
 
-    return res.status(201).json({
-        message: 'Collection created successfully'
-    });
+    // res.status(201).json({
+    //     message: "Collection created successfully"
+    // });
+
+    return res.json(newCollection);
 
   } catch (err) {
         console.error(err);
