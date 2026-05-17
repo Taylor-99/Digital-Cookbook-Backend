@@ -62,6 +62,8 @@ router.get('/:id', verifyToken, async (req, res) => {
     
 });
 
+// router.get('/:collectionId')
+
 router.delete('/:id', verifyToken, async (req, res) => {
 
     const { collectionID } = req.params.id;
