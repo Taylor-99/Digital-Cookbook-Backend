@@ -31,7 +31,7 @@ const getUserCollections = async (user_id) => {
 
 const getCollectionById = async (collection_id, user_id) => {
     const result = await pool.query(
-        `SELECT * FROM collections WHERE collection_id = $1 AND user_id - $2`,
+        `SELECT * FROM collections WHERE collection_id = $1 AND user_id = $2`,
         [collection_id, user_id]
     )
 };
@@ -108,6 +108,26 @@ const getCollectionRecipes = async (collection_id) => {
     return result.rows;
 };
 
+const getCollectionRecipe = async (recipe_id, user_id) => {
+
+    const result = await pool.query(
+        `
+        SELECT collections.collection_id,
+            collections.collection_name
+        FROM collections
+        JOIN collection_recipes
+        ON collections.collection_id =
+           collection_recipes.collection_id
+        WHERE collection_recipes.recipe_id = $1
+        AND collections.user_id = $2
+        `,
+        [recipe_id, user_id]
+    );
+
+    return result.rows;
+
+};
+
 const removeRecipeFromCollection = async (
     collection_id,
     recipe_id
@@ -130,6 +150,7 @@ module.exports = {
     deleteCollection,
     addRecipeToCollection,
     getCollectionRecipes,
+    getCollectionRecipe,
     removeRecipeFromCollection,
     ownsCollection,
 }

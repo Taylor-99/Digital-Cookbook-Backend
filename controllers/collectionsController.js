@@ -25,7 +25,7 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/collections/:id', verifyToken, async (req, res) => {
     
     const { collectionID } = req.params.id;
     const userID = req.user.user_id;
@@ -62,9 +62,27 @@ router.get('/:id', verifyToken, async (req, res) => {
     
 });
 
-// router.get('/:collectionId')
+router.get("/collectionsrecipe/:recipeId", verifyToken, async(req, res) => {
+    const { recipeId } = req.params;
+    const userID = req.user.user_id;
 
-router.delete('/:id', verifyToken, async (req, res) => {
+    try{
+
+        const collectionRecipe = await db.Collection.getCollectionRecipe(recipeId, userID);
+
+        res.status(200).json(collectionRecipe);
+
+    } catch (error){
+
+        console.error("Error getting recipe: ", error.message);
+        res.status(500).json({message: 'server error'});
+
+    };
+
+
+});
+
+router.delete('/collection/:id', verifyToken, async (req, res) => {
 
     const { collectionID } = req.params.id;
     const userID = req.user.user_id;
@@ -84,10 +102,10 @@ router.delete('/:id', verifyToken, async (req, res) => {
     };
 });
 
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/collectionrecipe/:id', verifyToken, async (req, res) => {
 
-    const { collectionID } = req.params.id;
-    const { recipeID } = req.body;
+    const { recipeID } = req.params.id;
+    const { collectionID } = req.body;
     const userID = req.user.user_id;
 
     try{
