@@ -33,27 +33,31 @@ const getCollectionById = async (collection_id, user_id) => {
     const result = await pool.query(
         `SELECT * FROM collections WHERE collection_id = $1 AND user_id = $2`,
         [collection_id, user_id]
-    )
+    );
+    return result.rows[0];
 };
 
 const updateCollection = async (
-    collection_id,
-    user_id,
     collection_name,
-    description
+    description,
+    collection_id,
+    user_id
 ) => {
+
     const result = await pool.query(
-        `UPDATE collections
+        `
+        UPDATE collections
         SET
             collection_name = $1,
-            description = $2,
-        WHERE collection_id = $4 AND user_id = $5
-        RETURNING *`,
+            description = $2
+        WHERE collection_id = $3 AND user_id = $4
+        RETURNING *
+        `,
         [
-            collection_id, 
-            user_id, 
-            collection_name, 
-            description
+            collection_name,
+            description,
+            collection_id,
+            user_id
         ]
     );
 
@@ -100,8 +104,23 @@ const addRecipeToCollection = async (
 const getCollectionRecipes = async (collection_id) => {
 
     const result = await pool.query(
-        `SELECT * FROM collection_recipes
-        WHERE collection_id = $1`,
+        `
+        SELECT 
+            recipes.recipe_id,
+            recipes.title,
+            recipes.image,
+            recipes.description,
+            recipes.cook_time,
+            recipes.prep_time,
+            recipes.serving_size
+
+        FROM collection_recipes
+
+        JOIN recipes
+        ON collection_recipes.recipe_id = recipes.recipe_id
+
+        WHERE collection_recipes.collection_id = $1
+        `,
         [collection_id]
     );
 

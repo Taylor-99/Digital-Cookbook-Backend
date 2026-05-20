@@ -25,12 +25,12 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/collections/:id', verifyToken, async (req, res) => {
+router.get('/collection/:collectionid', verifyToken, async (req, res) => {
     
-    const { collectionID } = req.params.id;
+    const { collectionid } = req.params;
     const userID = req.user.user_id;
 
-    const userOwns = await db.Collection.ownsCollection(collectionID, userID);
+    const userOwns = await db.Collection.ownsCollection(collectionid, userID);
 
     if (!userOwns){
         return res.status(403).jason({message: "unauthorized"});
@@ -38,13 +38,13 @@ router.get('/collections/:id', verifyToken, async (req, res) => {
 
     try {
 
-        const collection = await db.Collection.getCollectionById(collectionID, userID);
+        const collection = await db.Collection.getCollectionById(collectionid, userID);
 
         if(!collection) {
             return res.status(404).json({message: 'Collection not found'});
         }
 
-        const collectionRecipes = await db.Collection.getCollectionRecipes(collectionID);
+        const collectionRecipes = await db.Collection.getCollectionRecipes(collectionid);
 
         const fullCollection = {
             ...collection,
@@ -82,13 +82,13 @@ router.get("/collectionsrecipe/:recipeId", verifyToken, async(req, res) => {
 
 });
 
-router.delete('/collection/:id', verifyToken, async (req, res) => {
+router.delete('/collection/:collectionid', verifyToken, async (req, res) => {
 
-    const { collectionID } = req.params.id;
+    const { collectionid } = req.params;
     const userID = req.user.user_id;
 
     try{
-        const deletedCollection = db.Collection.deleteCollection(collectionID, userID);
+        const deletedCollection = db.Collection.deleteCollection(collectionid, userID);
 
         if (deletedCollection === 0){
             return res.status(404).json({message: 'Collection not found or unauthorized'});
@@ -102,15 +102,14 @@ router.delete('/collection/:id', verifyToken, async (req, res) => {
     };
 });
 
-router.delete('/collectionrecipe/:id', verifyToken, async (req, res) => {
+router.delete('/:collectionid/recipe/:recipeid', verifyToken, async (req, res) => {
 
-    const { recipeID } = req.params.id;
-    const { collectionID } = req.body;
+    const { collectionid, recipeid } = req.params;
     const userID = req.user.user_id;
 
     try{
 
-        const userOwns = await db.Collection.ownsCollection(collectionID, userID);
+        const userOwns = await db.Collection.ownsCollection(collectionid, userID);
 
         if(!userOwns) {
             return res.status(403).json({
@@ -118,7 +117,7 @@ router.delete('/collectionrecipe/:id', verifyToken, async (req, res) => {
             });
         };
 
-        const removedRecipe = db.Collection.removeRecipeFromCollection(collectionID, recipeID);
+        const removedRecipe = await db.Collection.removeRecipeFromCollection(collectionid, recipeid);
 
         if(removedRecipe === 0){
             return res.status(404).json({
@@ -135,8 +134,8 @@ router.delete('/collectionrecipe/:id', verifyToken, async (req, res) => {
 
 });
 
-router.put('/:id', verifyToken, async (req, res) => {
-  const { collectionID } = req.params.id;
+router.put('/:collectionid', verifyToken, async (req, res) => {
+  const { collectionid } = req.params;
   const userID = req.user.user_id;
 
   const { collection_name, description} = req.body;
@@ -144,17 +143,17 @@ router.put('/:id', verifyToken, async (req, res) => {
   try {
 
     const updatedCollection= await db.Collection.updateCollection(
-        collectionID,
-        userID,
         collection_name,
-        description
+        description,
+        collectionid,
+        userID
     );
 
     if (updatedCollection === 0) {
       return res.status(404).json({ message: 'Collection not found or unauthorized' });
     };
 
-    res.json({ message: 'Collection updated successfully' });
+    res.json(updatedCollection);
 
   } catch (error) {
     console.error('Error updating collection:', error);
@@ -191,8 +190,8 @@ router.post('/create', verifyToken, async (req, res) => {
 
 router.post('/:id/recipe', verifyToken, async (req, res) => {
     
-    const { collectionID } = req.params.id;
-    const { recipeID } = req.body;
+    const collectionID = req.params.id;
+    const { recipe_id } = req.body;
     const userID = req.user.user_id;
 
     try {
@@ -207,7 +206,7 @@ router.post('/:id/recipe', verifyToken, async (req, res) => {
 
         await db.Collection.addRecipeToCollection(
             collectionID,
-            recipeID
+            recipe_id
         );
 
         return res.status(201).json({

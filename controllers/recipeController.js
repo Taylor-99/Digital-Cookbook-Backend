@@ -31,26 +31,26 @@ router.get('/', verifyToken, async (req, res) => {
 
 //gets one the recipe with ingredients and instructions
 // used for viewing and editing
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:recipeid', verifyToken, async (req, res) => {
 
   // console.log("in backend")
   // console.log(req.params.id)
 
-    const recipeID = req.params.id;
+    const { recipeid } = req.params;
     const userID = req.user.user_id;
 
     // console.log(recipeID)
 
     try {
 
-        const recipe = await db.Recipe.getRecipeById(recipeID, userID);
+        const recipe = await db.Recipe.getRecipeById(recipeid, userID);
 
         if (!recipe){
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        const recipeIngredients = await db.Ingredient.getRecipeIngredients(recipeID);
-        const recipeInstructions = await db.Instruction.getRecipeInstructions(recipeID);
+        const recipeIngredients = await db.Ingredient.getRecipeIngredients(recipeid);
+        const recipeInstructions = await db.Instruction.getRecipeInstructions(recipeid);
 
         const fullRecipe = {
             ...recipe,
@@ -70,11 +70,11 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 });
 
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:recipeid', verifyToken, async (req, res) => {
 
     //has FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) ON DELETE CASCADE for instructions and ingredients Tables, so when the recipe is deleted, it will delete both instructions and ingredients automatically.
 
-    const { recipeID } = req.params.id;
+    const { recipeid } = req.params;
     const userID = req.user.user_id;
 
     try{
@@ -91,9 +91,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
     }
 });
 
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:recipeid', verifyToken, async (req, res) => {
 
-  const { recipeID } = req.params.id;
+  const { recipeid } = req.params;
   const userID = req.user.user_id;
 
   const { title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id, ingredients, instructions } = req.body;
@@ -107,7 +107,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     // 1. Update recipe (and check ownership)
 
     const updatedRecipe = await db.Recipe.updateRecipe(
-        recipeID,
+        recipeid,
         userID,
         title,
         image,
@@ -124,13 +124,13 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     // 2. Delete old ingredients
-    const deletedIngredients = await db.Ingredient.deleteIngredientsByRecipeId(client, recipeID);
-    console.log("Deleted ingredients: ", deletedIngredients);
+    const deletedIngredients = await db.Ingredient.deleteIngredientsByRecipeId(recipeid);
+    // console.log("Deleted ingredients: ", deletedIngredients);
 
     // 3. Insert new ingredients
     for (let rItem = 0; rItem < ingredients.length; rItem++) {
       await db.Ingredient.createIngredient(
-        recipeID,
+        recipeid,
         ingredients[rItem].name,
         ingredients[rItem].quantity,
         ingredients[rItem].unit,
@@ -139,13 +139,13 @@ router.put('/:id', verifyToken, async (req, res) => {
     };
 
     // 4. Delete old instructions
-    const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(recipeID);
+    const deletedInstructions = await db.Instruction.deleteInstructionsByRecipeId(recipeid);
     // console.log("Deleted instructions: ", deletedInstructions);
 
     // 5. Insert new instructions
     for (let rStep = 0; rStep < instructions.length; rStep++) {
       await db.Instruction.createInstruction(
-        recipeID,
+        recipeid,
         instructions[rStep].step,
         rStep
       );
