@@ -75,19 +75,22 @@ router.delete('/:recipeid', verifyToken, async (req, res) => {
     //has FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) ON DELETE CASCADE for instructions and ingredients Tables, so when the recipe is deleted, it will delete both instructions and ingredients automatically.
 
     const { recipeid } = req.params;
-    const userID = req.user.user_id;
+    const userid = req.user.user_id;
 
     try{
-        const deletedRecipe = db.Recipe.deleteRecipe(recipeID, userID);
+        const deletedRecipe = db.Recipe.deleteRecipe(recipeid, userid);
 
         if (deletedRecipe === 0){
             return res.status(404).json({message: 'Recipe not found or unauthorized'});
-        }
+        };
 
         return res.json({message: 'Recipe deleted successfully'});
+
     }catch (err) {
+
         console.error(err);
-        res.status(500).json({error: 'ERROR deleting recipe'})
+        res.status(500).json({error: 'ERROR deleting recipe'});
+        
     }
 });
 

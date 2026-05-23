@@ -15,7 +15,12 @@ const createRecipe = async (
   const result = await pool.query(
     `INSERT INTO recipes
      (user_id, title, image, cook_time, prep_time, serving_size, description, source, spoonacular_id)
+
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+
+     ON CONFLICT (user_id, spoonacular_id)
+     DO NOTHING
+     
      RETURNING *`,
     [
       user_id,
@@ -53,16 +58,22 @@ const getRecipeById = async (recipeId, userId) => {
   return result.rows[0];
 };
 
-const saveApiRecipe = async (userId, recipe) => {
-  const result = await pool.query(
-    `INSERT INTO recipes (user_id, title, image, spoonacular_id, source)
-     VALUES ($1, $2, $3, $4, 'api')
-     ON CONFLICT (user_id, spoonacular_id) DO NOTHING
-     RETURNING *`,
-    [userId, recipe.title, recipe.image, recipe.id]
-  );
+const getSavedRecipe = async (
+    userID,
+    spoonacularID
+) => {
 
-  return result.rows[0];
+    const result = await pool.query(
+        `
+        SELECT *
+        FROM recipes
+        WHERE user_id = $1
+        AND spoonacular_id = $2
+        `,
+        [userID, spoonacularID]
+    );
+
+    return result.rows[0];
 };
 
 const updateRecipe = async (
@@ -126,7 +137,7 @@ module.exports = {
   createRecipe,
   getUserRecipes,
   getRecipeById,
-  saveApiRecipe,
+  getSavedRecipe,
   updateRecipe,
   deleteRecipe,
 };
