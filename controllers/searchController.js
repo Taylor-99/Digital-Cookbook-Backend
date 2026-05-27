@@ -73,12 +73,8 @@ router.get('/:recipeid/saved', verifyToken, async (req, res) => {
             );
 
         res.status(200).json({
-            saved: !!savedRecipe
-        });
-
-        return res.status(201).json({
-            message: 'Recipe created successfully',
-            saved: savedRecipe.recipe_id
+            saved: !!savedRecipe,
+            recipeID: savedRecipe?.recipe_id || null
         });
 
     } catch (error) {
@@ -127,7 +123,7 @@ router.post('/searchquery', async (req, res) => {
             cuisine, //String
             includeIngredients, //Array of Strings
             excludeIngredients, //Array of Strings
-            // maxReadyTime //Number
+            maxReadyTime //Number
         } = req.body;
 
         const params = new URLSearchParams();
@@ -142,27 +138,28 @@ router.post('/searchquery', async (req, res) => {
 
         if (cuisine) {
             params.append('cuisine', cuisine);
-        }
+        };
+
+        if (maxReadyTime) {
+            params.append('maxReadyTime', maxReadyTime);
+        };
 
         if (includeIngredients?.length) {
             params.append(
                 'includeIngredients',
                 includeIngredients.join(',')
             );
-        }
+        };
 
         if (excludeIngredients?.length) {
             params.append(
                 'excludeIngredients',
                 excludeIngredients.join(',')
             );
-        }
-
-        if (maxReadyTime) {
-            params.append('maxReadyTime', maxReadyTime);
-        }
+        };
 
         params.append('instructionsRequired', true);
+        params.append('addRecipeInformation', true);
         params.append('number', 12);
 
         params.append(
