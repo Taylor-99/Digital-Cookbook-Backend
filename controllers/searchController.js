@@ -225,6 +225,8 @@ router.post('/save', verifyToken, async(req, res) => {
                 spoonacular_id
         );
 
+        console.log(recipe);
+
         return res.status(201).json({
             message: 'Recipe created successfully',
             recipeid: recipe.recipe_id
