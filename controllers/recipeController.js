@@ -70,6 +70,30 @@ router.get('/:recipeid', verifyToken, async (req, res) => {
 
 });
 
+router.get('/notes/:recipeid', verifyToken, async (req, res) => {
+
+  const { recipeid } = req.params;
+  const userID = req.user.user_id;
+
+  try{
+
+     const notes = await db.Recipe.getNotesforRecipe(userID, recipeid);
+
+        if (!notes){
+            return res.status(404).json({message: 'Notes not found'});
+        }
+
+        res.json(notes);
+
+  }catch (error) {
+
+    console.error("Error getting Notes:", error.message);
+    res.status(500).json({ message: 'Internal server error' });
+
+  };
+
+});
+
 router.delete('/:recipeid', verifyToken, async (req, res) => {
 
     //has FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) ON DELETE CASCADE for instructions and ingredients Tables, so when the recipe is deleted, it will delete both instructions and ingredients automatically.
@@ -230,5 +254,30 @@ router.post('/create', verifyToken, async (req, res) => {
 });
 
 
+router.post('/create/note/:recipeid', verifyToken, async (req, res) => {
+
+  const { recipeid } = req.params;
+  const { content } = req.body;
+  const userID = req.user.user_id;
+
+  try{
+
+    const note = await db.Recipe.createRecipeNote(
+      userID,
+      recipeid,
+      content
+    );
+
+    return res.status(201).json({
+        message: 'Note created successfully'
+    });
+
+  }catch (error) {
+
+    console.error(err);
+    return res.status(500).json({ error: 'Error creating note' });
+
+  }
+});
 
 module.exports = router

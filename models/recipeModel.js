@@ -133,6 +133,47 @@ const deleteRecipe = async (recipe_id, user_id) => {
 
 };
 
+const getNotesforRecipe = async (userId, recipeId) => {
+
+  const result = await pool.query(
+    `
+    SELECT * notes WHERE user_id = $1 AND recipe_id = $2
+    `,
+    [userId, recipeId]
+  );
+
+  return result.rows[0];
+
+};
+
+const createRecipeNote = async (
+  user_id,
+  recipe_id,
+  content
+) => {
+
+  const result = await pool.query(
+    `
+    INSERT INTO notes
+    
+    (user_id, recipe_id, content)
+
+    VALUES ($1, $2, $3)
+
+    RETURNING *
+    `,
+
+    [user_id,
+      recipe_id,
+      content
+    ]
+
+  );
+
+  return result.rows[0];
+
+};
+
 module.exports = {
   createRecipe,
   getUserRecipes,
@@ -140,4 +181,6 @@ module.exports = {
   getSavedRecipe,
   updateRecipe,
   deleteRecipe,
+  getNotesforRecipe,
+  createRecipeNote,
 };
