@@ -70,7 +70,8 @@ router.get('/:recipeid', verifyToken, async (req, res) => {
 
 });
 
-router.get('/notes/:recipeid', verifyToken, async (req, res) => {
+//gets all notes for recipe
+router.get('/notes/recipe/:recipeid', verifyToken, async (req, res) => {
 
   const { recipeid } = req.params;
   const userID = req.user.user_id;
@@ -84,6 +85,31 @@ router.get('/notes/:recipeid', verifyToken, async (req, res) => {
         }
 
         res.json(notes);
+
+  }catch (error) {
+
+    console.error("Error getting Notes:", error.message);
+    res.status(500).json({ message: 'Internal server error' });
+
+  };
+
+});
+
+//gets one note for editing
+router.get('/notes/:noteid', verifyToken, async (req, res) => {
+
+  const { noteid } = req.params;
+  const userID = req.user.user_id;
+
+  try{
+
+    const note = await db.Recipe.getNoteById(noteid, userID);
+
+    if (!note){
+        return res.status(404).json({message: 'Note not found'});
+    };
+
+    res.json(note);
 
   }catch (error) {
 
@@ -114,6 +140,28 @@ router.delete('/:recipeid', verifyToken, async (req, res) => {
 
         console.error(err);
         res.status(500).json({error: 'ERROR deleting recipe'});
+        
+    }
+});
+
+router.delete('/notes/:noteid', verifyToken, async (req, res) => {
+
+    const { noteid } = req.params;
+    const userid = req.user.user_id;
+
+    try{
+      const deletedNote = db.Recipe.deleteNote(noteid, userid);
+
+      if (deletedNote === 0){
+          return res.status(404).json({message: 'Note not found or unauthorized'});
+      };
+
+      return res.json({message: 'Note deleted successfully'});
+
+    }catch (err) {
+
+      console.error(err);
+      res.status(500).json({error: 'ERROR deleting recipe'});
         
     }
 });
@@ -183,6 +231,36 @@ router.put('/:recipeid', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating recipe:', error);
     res.status(500).json({ message: 'Error updating recipe' });
+  }
+
+});
+
+router.put('/notes/:noteid', verifyToken, async (req, res) => {
+
+  const { noteid } = req.params;
+  const userID = req.user.user_id;
+
+  const { content } = req.body;
+
+  try {
+
+    // 1. Update recipe (and check ownership)
+
+    const updatedNote = await db.Recipe.updateNote(
+        userID,
+        noteid,
+        content
+    );
+
+    if (updatedNote === 0) {
+      return res.status(404).json({ message: 'Note not found or unauthorized' });
+    }
+
+    res.json(updatedNote);
+
+  } catch (error) {
+    console.error('Error updating note:', error);
+    res.status(500).json({ message: 'Error updating note' });
   }
 
 });
@@ -268,13 +346,11 @@ router.post('/create/note/:recipeid', verifyToken, async (req, res) => {
       content
     );
 
-    return res.status(201).json({
-        message: 'Note created successfully'
-    });
+    return res.status(201).json(note);
 
   }catch (error) {
 
-    console.error(err);
+    console.error(error);
     return res.status(500).json({ error: 'Error creating note' });
 
   }
