@@ -8,18 +8,41 @@ const pool = require('../db');
 
 const verifyToken = require('../middleware/VerifyJWT');
 
+let randomRecipesCache = null;
+let randomRecipesCacheTime = null;
+
 router.get('/', async (req, res) => {
 
     try {
 
+        const ONE_HOUR = 60 * 60 * 1000;
+    
+        if (
+          randomRecipesCache &&
+          randomRecipesCacheTime &&
+          Date.now() - randomRecipesCacheTime < ONE_HOUR
+        ) {
+          return res.json(randomRecipesCache);
+        }
+
         const randomRecipes = await fetch(`https://api.spoonacular.com/recipes/random?number=10&apiKey=${process.env.SPOONACULAR_API_KEY}`);
 
         if (!randomRecipes.ok) {
-            throw new Error(`API Error: ${randomRecipes.status}`);
+            const errorData = await randomRecipes.json();
+
+            return res.status(randomRecipes.status).json({
+                message:
+                errorData.message ||
+                "Unable to retrieve recipes"
+            });
         }
 
         const data = await randomRecipes.json();
-        res.status(200).json(data);
+
+        randomRecipesCache = data.recipes;
+        randomRecipesCacheTime = Date.now();
+
+        return res.json(randomRecipesCache);
         
         
     } catch (error) {
@@ -31,10 +54,73 @@ router.get('/', async (req, res) => {
 
 });
 
+// let homeRandomRecipesCache = null;
+// let homeRandomRecipesCacheTime = null;
+
+// router.get('/home', async (req, res) => {
+ 
+//     try {
+
+//         const ONE_HOUR = 60 * 60 * 1000;
+    
+//         if (
+//           homeRandomRecipesCache &&
+//           homeRandomRecipesCacheTime &&
+//           Date.now() - homeRandomRecipesCacheTime < ONE_HOUR
+//         ) {
+//           return res.json(homeRandomRecipesCache);
+//         }
+
+//         const randomRecipes = await fetch(`https://api.spoonacular.com/recipes/random?number=5&apiKey=${process.env.SPOONACULAR_API_KEY}`);
+
+//         if (!randomRecipes.ok) {
+//             const errorData = await randomRecipes.json();
+
+//             return res.status(randomRecipes.status).json({
+//                 message:
+//                 errorData.message ||
+//                 "Unable to retrieve recipes"
+//             });
+//         }
+
+
+//         const data = await randomRecipes.json();
+
+//         homeRandomRecipesCache = data.recipes;
+//         homeRandomRecipesCacheTime = Date.now();
+
+//         return res.json(homeRandomRecipesCache);
+            
+//     } catch (error) {
+
+//         console.error("Error getting Recipes:", error.message);
+
+//         return res.status(402).json({
+//             message:
+//             "Recipe API limit reached. Please try again tomorrow."
+//         });
+        
+//     }
+
+// });
+
+const recipeCache = {};
+
 router.get('/:recipeid', async (req, res) => {
     try{
 
         const { recipeid } = req.params;
+
+        const ONE_HOUR = 60 * 60 * 1000;
+
+        const cachedRecipe = recipeCache.get(recipeid);
+
+        if (
+        cachedRecipe &&
+        Date.now() - cachedRecipe.timestamp < ONE_HOUR
+        ) {
+        return res.json(cachedRecipe.data);
+        }
 
         const selectedRecipeResponse = await fetch(`https://api.spoonacular.com/recipes/${recipeid}/information?apiKey=${process.env.SPOONACULAR_API_KEY}`);
         const selectedRecipe = await selectedRecipeResponse.json();
@@ -46,6 +132,11 @@ router.get('/:recipeid', async (req, res) => {
             recipe: selectedRecipe,
             similarRecipes: similarRecipes,
         };
+
+        recipeCache.set(recipeid, {
+            data: recipePackage,
+            timestamp: Date.now()
+        });
 
         res.status(200).json(recipePackage);
 
@@ -87,28 +178,6 @@ router.get('/:recipeid/saved', verifyToken, async (req, res) => {
 
     }
 
-});
-
-router.delete('/:recipeid', verifyToken, async (req, res) => {
-
-    const { recipeid } = req.params;
-    const userid = req.user.user_id;
-
-    try{
-        const deletedRecipe = db.Recipe.deleteRecipe(recipeid, userid);
-
-        if (deletedRecipe === 0){
-            return res.status(404).json({message: 'Recipe not found or unauthorized'});
-        }
-
-        return res.json({message: 'Recipe deleted successfully'});
-
-    }catch (err) {
-
-        console.error(err);
-        res.status(500).json({error: 'ERROR deleting recipe'});
-
-    }
 });
 
 router.post('/searchquery', async (req, res) => {
