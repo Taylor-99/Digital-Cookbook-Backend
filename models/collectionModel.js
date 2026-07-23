@@ -22,7 +22,17 @@ const createCollection = async (
 
 const getUserCollections = async (user_id) => {
     const result = await pool.query(
-        `SELECT * FROM collections WHERE user_id = $1`,
+        `
+        SELECT
+            c.*,
+            COUNT(cr.recipe_id) AS recipe_count
+        FROM collections c
+        LEFT JOIN collection_recipes cr
+            ON c.collection_id = cr.collection_id
+        WHERE c.user_id = $1
+        GROUP BY c.collection_id
+        ORDER BY c.collection_name;
+        `,
         [user_id]
     );
 

@@ -42,6 +42,8 @@ router.get('/', async (req, res) => {
         randomRecipesCache = data.recipes;
         randomRecipesCacheTime = Date.now();
 
+        // console.log(randomRecipesCache)
+
         return res.json(randomRecipesCache);
         
         
@@ -53,56 +55,6 @@ router.get('/', async (req, res) => {
     }
 
 });
-
-// let homeRandomRecipesCache = null;
-// let homeRandomRecipesCacheTime = null;
-
-// router.get('/home', async (req, res) => {
- 
-//     try {
-
-//         const ONE_HOUR = 60 * 60 * 1000;
-    
-//         if (
-//           homeRandomRecipesCache &&
-//           homeRandomRecipesCacheTime &&
-//           Date.now() - homeRandomRecipesCacheTime < ONE_HOUR
-//         ) {
-//           return res.json(homeRandomRecipesCache);
-//         }
-
-//         const randomRecipes = await fetch(`https://api.spoonacular.com/recipes/random?number=5&apiKey=${process.env.SPOONACULAR_API_KEY}`);
-
-//         if (!randomRecipes.ok) {
-//             const errorData = await randomRecipes.json();
-
-//             return res.status(randomRecipes.status).json({
-//                 message:
-//                 errorData.message ||
-//                 "Unable to retrieve recipes"
-//             });
-//         }
-
-
-//         const data = await randomRecipes.json();
-
-//         homeRandomRecipesCache = data.recipes;
-//         homeRandomRecipesCacheTime = Date.now();
-
-//         return res.json(homeRandomRecipesCache);
-            
-//     } catch (error) {
-
-//         console.error("Error getting Recipes:", error.message);
-
-//         return res.status(402).json({
-//             message:
-//             "Recipe API limit reached. Please try again tomorrow."
-//         });
-        
-//     }
-
-// });
 
 const recipeCache = {};
 
