@@ -56,23 +56,13 @@ router.get('/', async (req, res) => {
 
 });
 
-const recipeCache = {};
-
 router.get('/:recipeid', async (req, res) => {
     try{
-
+        
         const { recipeid } = req.params;
+        // console.log("recipeID", recipeid)
 
         const ONE_HOUR = 60 * 60 * 1000;
-
-        const cachedRecipe = recipeCache.get(recipeid);
-
-        if (
-        cachedRecipe &&
-        Date.now() - cachedRecipe.timestamp < ONE_HOUR
-        ) {
-        return res.json(cachedRecipe.data);
-        }
 
         const selectedRecipeResponse = await fetch(`https://api.spoonacular.com/recipes/${recipeid}/information?apiKey=${process.env.SPOONACULAR_API_KEY}`);
         const selectedRecipe = await selectedRecipeResponse.json();
@@ -84,11 +74,6 @@ router.get('/:recipeid', async (req, res) => {
             recipe: selectedRecipe,
             similarRecipes: similarRecipes,
         };
-
-        recipeCache.set(recipeid, {
-            data: recipePackage,
-            timestamp: Date.now()
-        });
 
         res.status(200).json(recipePackage);
 
